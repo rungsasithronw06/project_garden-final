@@ -15,10 +15,10 @@ npm test                           # เทสต์ server + client (ไม่�
 ## Deploy บน Vercel
 
 1. Import repository นี้ใน Vercel โดยตั้ง **Root Directory** เป็นโฟลเดอร์รากของ repository
-2. ใช้ค่า Build และ Output ที่กำหนดไว้ใน `vercel.json` (`npm run build` และ `client/dist`)
+2. `vercel.json` กำหนด service `client` (Vite) และ `server` (Express) พร้อม rewrite `/api/*` ไป backend และ path อื่นไป frontend
 3. กด Deploy ได้เลย ไม่จำเป็นต้องตั้ง Environment Variables สำหรับค่าปัจจุบัน
 
-หน้าเว็บใช้ Vite ส่วน `api/[...path].js` ส่ง `/api/*` ไปยัง Express แบบ Serverless Function และแนบ `server/data/backup.json` สำหรับ fallback ข้อมูลไว้แล้ว การทดสอบในเครื่องยังใช้ `npm run dev` ตามปกติ
+หน้าเว็บเรียก API ด้วย path แบบ relative (`/api/...`) จึงใช้โดเมนเดียวกับ backend ได้โดยตรง ไม่ต้องมี service binding; `server/data/backup.json` อยู่ภายใน service root ของ Express สำหรับ fallback ข้อมูล การทดสอบในเครื่องยังใช้ `npm run dev` ตามปกติ
 
 ## เช็คลิสต์ฟีเจอร์ไฟนอล
 
