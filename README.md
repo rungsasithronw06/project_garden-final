@@ -12,6 +12,14 @@ npm run dev                        # Express :3001 + Vite :5173 พร้อม�
 npm test                           # เทสต์ server + client (ไม่ต้องใช้เน็ต)
 ```
 
+## Deploy บน Vercel
+
+1. Import repository นี้ใน Vercel โดยตั้ง **Root Directory** เป็นโฟลเดอร์รากของ repository
+2. ใช้ค่า Build และ Output ที่กำหนดไว้ใน `vercel.json` (`npm run build` และ `client/dist`)
+3. กด Deploy ได้เลย ไม่จำเป็นต้องตั้ง Environment Variables สำหรับค่าปัจจุบัน
+
+หน้าเว็บใช้ Vite ส่วน `api/[...path].js` ส่ง `/api/*` ไปยัง Express แบบ Serverless Function และแนบ `server/data/backup.json` สำหรับ fallback ข้อมูลไว้แล้ว การทดสอบในเครื่องยังใช้ `npm run dev` ตามปกติ
+
 ## เช็คลิสต์ฟีเจอร์ไฟนอล
 
 | # | ฟีเจอร์ | สถานะ |
@@ -79,7 +87,7 @@ App                               state: query, filters, selected  ·  hooks: us
 | ตัวกรอง dropdown | อ่านค่าสดตอนมีการพิมพ์ค้นหา | มีผลทันทีที่เลือก (ไม่ต้องกดยืนยัน) ปุ่มล่างเป็น "ดูผลลัพธ์" |
 | ค้นหา | ต้องพิมพ์ถูกทั้งคำ | `[เพิ่มใหม่]` พิมพ์ผิดเล็กน้อยก็ยังเจอ |
 | ไฟล์ | `index.html` ไฟล์เดียว | แยกเป็น component/hook/util (DSA เดิมไม่ได้แก้ตรรกะ) |
-| `vercel.json` | มี | ยังไม่ได้ย้ายมา (deploy ไม่บังคับ) |
+| `vercel.json` | มี | เพิ่ม config ให้ deploy frontend + Express API บน Vercel |
 
 ## ข้อแนะนำของอาจารย์ → แก้อย่างไร (Before → After)
 
