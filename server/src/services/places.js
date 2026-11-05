@@ -26,9 +26,18 @@ export function classify(tags) {
   return null;
 }
 
+// [แก้ไข] เดิมใช้ regex (~"^(a|b)$") ซึ่ง Overpass ต้องไล่เทียบทุกรายการ → ช้าจนเกิน 25 วินาที
+// ตอนนี้ใช้ "ตรงตัว" (=) ทีละค่า Overpass ใช้ดัชนีได้ เร็วกว่ามาก
+const AMENITIES = ["restaurant", "cafe", "fuel"];
+const TOURISMS = ["hotel", "guest_house", "resort", "hostel", "camp_site", "attraction", "viewpoint", "museum", "zoo"];
+
 export function buildQuery(point, radiusMeters) {
   const around = `(around:${radiusMeters},${point.lat},${point.lng})`;
-  return `[out:json][timeout:20];(nwr${around}["name"]["amenity"~"^(restaurant|cafe|fuel)$"];nwr${around}["name"]["tourism"~"^(hotel|guest_house|resort|hostel|camp_site|attraction|viewpoint|museum|zoo)$"];);out center 300;`;
+  const parts = [
+    ...AMENITIES.map((value) => `nwr${around}["amenity"="${value}"]["name"];`),
+    ...TOURISMS.map((value) => `nwr${around}["tourism"="${value}"]["name"];`)
+  ];
+  return `[out:json][timeout:30];(${parts.join("")});out center 200;`;
 }
 
 // แปลงผลดิบ → กลุ่มตามหมวด (ฟังก์ชันล้วน ไว้เทสต์)
@@ -68,17 +77,21 @@ export async function getPlaces(point) {
   }
   try {
     stats.upstreamPlaces += 1;
-    const raw = await fetchJsonWithTimeout(
-      config.overpass.url,
-      { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: `data=${encodeURIComponent(buildQuery(point, radius))}` },
-      25000
+    const requestOptions = (query) => ({ method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: `data=${encodeURIComponent(query)}` });
+    // ยิงทุกเซิร์ฟเวอร์พร้อมกัน ตัวไหนตอบรูปแบบถูกก่อนใช้ตัวนั้น (Promise.any) — ล่มตัวเดียวไม่ทำให้ฟีเจอร์พัง
+    const raw = await Promise.any(
+      config.overpass.urls.map(async (url) => {
+        const data = await fetchJsonWithTimeout(url, requestOptions(buildQuery(point, radius)), config.overpass.timeoutMs);
+        if (!Array.isArray(data?.elements)) throw new Error(`${url}: รูปแบบข้อมูลไม่ถูกต้อง`);
+        return data;
+      })
     );
-    if (!Array.isArray(raw?.elements)) throw new Error("Overpass: รูปแบบข้อมูลไม่ถูกต้อง");
     const result = { radiusKm: radius / 1000, ...shapePlaces(raw.elements, point, config.places.perCategory) };
     cache.set(key, result, config.ttl.places);
     return result;
   } catch (error) {
-    console.error("[places]", error.message);
+    // Promise.any ล้มทุกตัว = AggregateError → แสดงสาเหตุของแต่ละเซิร์ฟเวอร์
+    console.error("[places]", error.errors ? error.errors.map((e) => e.message).join(" | ") : error.message);
     if (cached) return { ...cached.value, stale: true };
     throw new HttpError(502, "UPSTREAM_UNAVAILABLE", "ดึงข้อมูลสถานที่รอบสวนไม่ได้ในขณะนี้");
   }
