@@ -26,22 +26,18 @@ export function classify(tags) {
   return null;
 }
 
-// [แก้ไข] เดิมใช้ regex (~"^(a|b)$") ซึ่ง Overpass ต้องไล่เทียบทุกรายการ → ช้าจนเกิน 25 วินาที
-// ตอนนี้ใช้ "ตรงตัว" (=) ทีละค่า Overpass ใช้ดัชนีได้ เร็วกว่ามาก
-const AMENITIES = ["restaurant", "cafe", "fuel"];
-const TOURISMS = ["hotel", "guest_house", "resort", "hostel", "camp_site", "attraction", "viewpoint", "museum", "zoo"];
-
+// [แก้ไข] ใช้ "กรอบสี่เหลี่ยม" (bbox) แทน around: bbox ใช้ดัชนีพิกัดของ Overpass ตรง ๆ เร็วกว่ามาก
+// ส่วน around คำนวณระยะวงกลมกับทุกจุด/เส้น/ความสัมพันธ์ จึงหนักและเป็นสาเหตุที่หมดเวลา
+// กรอบสี่เหลี่ยมจะกว้างกว่าวงกลมเล็กน้อย → shapePlaces คัดทิ้งรายการที่เกินรัศมีจริงอีกที (Haversine)
 export function buildQuery(point, radiusMeters) {
-  const around = `(around:${radiusMeters},${point.lat},${point.lng})`;
-  const parts = [
-    ...AMENITIES.map((value) => `nwr${around}["amenity"="${value}"]["name"];`),
-    ...TOURISMS.map((value) => `nwr${around}["tourism"="${value}"]["name"];`)
-  ];
-  return `[out:json][timeout:30];(${parts.join("")});out center 200;`;
+  const dLat = radiusMeters / 111320;
+  const dLng = radiusMeters / (111320 * Math.cos((point.lat * Math.PI) / 180));
+  const box = [point.lat - dLat, point.lng - dLng, point.lat + dLat, point.lng + dLng].map((n) => n.toFixed(5)).join(",");
+  return `[out:json][timeout:25];(nwr["amenity"~"^(restaurant|cafe|fuel)$"]["name"](${box});nwr["tourism"~"^(hotel|guest_house|resort|hostel|camp_site|attraction|viewpoint|museum|zoo)$"]["name"](${box}););out center 300;`;
 }
 
 // แปลงผลดิบ → กลุ่มตามหมวด (ฟังก์ชันล้วน ไว้เทสต์)
-export function shapePlaces(elements, origin, perCategory) {
+export function shapePlaces(elements, origin, perCategory, radiusKm = Infinity) {
   // Hash Map: กันรายการซ้ำ (OSM มักมีทั้งจุดและอาคารของที่เดียวกัน) key = หมวด + ชื่อ  → O(1) ต่อรายการ
   const seen = new Map();
   for (const element of elements || []) {
@@ -53,7 +49,9 @@ export function shapePlaces(elements, origin, perCategory) {
     if (!category || !name || typeof lat !== "number" || typeof lng !== "number") continue;
     const key = `${category}|${name}`;
     if (seen.has(key)) continue;
-    seen.set(key, { category, name, lat, lng, distanceKm: Math.round(haversine(origin.lat, origin.lng, lat, lng) * 10) / 10 });
+    const distance = haversine(origin.lat, origin.lng, lat, lng);
+    if (distance > radiusKm) continue; // กรอบสี่เหลี่ยมมีมุมเกินวงกลม → ตัดที่เกินรัศมีออก
+    seen.set(key, { category, name, lat, lng, distanceKm: Math.round(distance * 10) / 10 });
   }
   const groups = [];
   let total = 0;
@@ -86,7 +84,7 @@ export async function getPlaces(point) {
         return data;
       })
     );
-    const result = { radiusKm: radius / 1000, ...shapePlaces(raw.elements, point, config.places.perCategory) };
+    const result = { radiusKm: radius / 1000, ...shapePlaces(raw.elements, point, config.places.perCategory, radius / 1000) };
     cache.set(key, result, config.ttl.places);
     return result;
   } catch (error) {

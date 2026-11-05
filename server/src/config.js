@@ -21,7 +21,7 @@ export const config = {
   overpass: {
     urls: process.env.OVERPASS_URL
       ? [process.env.OVERPASS_URL]
-      : ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://overpass.kumi.systems/api/interpreter"],
+      : ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"],
     timeoutMs: 40000
   },
   openMeteo: { baseUrl: process.env.OPEN_METEO_URL || "https://api.open-meteo.com/v1/forecast" }, // สภาพอากาศ
