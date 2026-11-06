@@ -11,51 +11,53 @@ const REGION_OPTIONS = [
   { value: "ภาคใต้", label: "ภาคใต้" },
   { value: "ภาคตะวันตก", label: "ภาคตะวันตก" }
 ];
-// [เพิ่มใหม่] เพิ่ม "น้อยไปมาก" (ข้อ 3)
-const POPULAR_OPTIONS = [
-  { value: "none", label: "แสดงทั้งหมด" },
-  { value: "popular", label: "ยอดผู้เข้าชมมากที่สุด" },
-  { value: "popularAsc", label: "ยอดผู้เข้าชมน้อยที่สุด" }
-];
 // รายชื่อจังหวัดสร้างจากข้อมูลพิกัดจังหวัดเดิม
 const PROVINCE_OPTIONS = [{ value: "", label: "เลือกจังหวัดต้นทาง" }];
 for (const provinceName in provinceCoordinates) PROVINCE_OPTIONS.push({ value: provinceName, label: provinceName });
 
-// แผงเครื่องมือค้นหาด้านซ้าย
-// [แก้ไขตามข้อแนะนำข้อ 1 — มือถือ] เดิมแผงนี้ยาวมากจนผลลัพธ์ถูกดันลงไปท้ายจอ
-//   ตอนนี้บนจอเล็กจะเหลือแค่ช่องค้นหา + ปุ่ม "ตัวกรอง" (พับเก็บไว้) และผลลัพธ์ขึ้นมาอยู่ถัดลงมาทันที
-// [แก้ไขตามข้อ 4 UX] ตัวกรองมีผลทันทีที่เลือก ไม่ต้องกด "ยืนยัน" อีกขั้น — ปุ่มล่างเปลี่ยนเป็น "ดูผลลัพธ์" (พับแผง + เลื่อนไปที่ผลลัพธ์)
-export default function SearchPanel({ query, onQueryChange, gardens, filters, onFilterChange, resultCount, onShowResults, onReset }) {
+// แผงเครื่องมือค้นหา
+// [แก้ไข UX] จอใหญ่: แผงอยู่ซ้ายแบบติดจอ ตัวกรองมีผลทันที (ไม่มีปุ่มยืนยัน) ท้ายแผงบอกจำนวนผลลัพธ์ + ปุ่มล้างทั้งหมด
+//             จอเล็ก (≤ 850px): เหลือช่องค้นหา + ปุ่ม "ตัวกรอง (n)" กดแล้วเปิดเป็น bottom sheet มีปุ่ม "ดูผลลัพธ์" ปิด sheet แล้วเลื่อนไปที่ผลลัพธ์
+// [ย้าย] ตัวเลือก "เรียงตาม" ไปอยู่ที่หัวผลลัพธ์ (ResultsArea.jsx) — ใช้ state filters.popular ตัวเดิม
+// [เอาออก] รูปแผนที่ประเทศไทย (ไฟล์รูปยังอยู่ใน public/assets/images ไม่ได้ลบ)
+export default function SearchPanel({ query, onQueryChange, gardens, filters, onFilterChange, statusText, resultLabel, onShowResults, onReset }) {
   const [open, setOpen] = useState(false); // ใช้เฉพาะจอเล็ก (จอใหญ่แสดงตัวกรองเสมอ)
+  const activeCount = (filters.region !== "ทั้งหมด" ? 1 : 0) + (filters.province ? 1 : 0);
 
   return (
     <aside className="panel" aria-label="เครื่องมือค้นหา">
       <div className="panel-inner">
         <h2 className="section-label">ค้นหาสวนพฤกษศาสตร์</h2>
-        <SearchBox query={query} onQueryChange={onQueryChange} gardens={gardens} />
-        <button className="filter-toggle" type="button" aria-expanded={open} aria-controls="filters" onClick={() => setOpen(!open)}>
-          {open ? "ซ่อนตัวกรอง ▲" : "ตัวกรองและการเรียง ▼"}
-        </button>
+        <div className="search-row">
+          <SearchBox query={query} onQueryChange={onQueryChange} gardens={gardens} />
+          <button className="filter-toggle" type="button" aria-expanded={open} aria-controls="filters" onClick={() => setOpen(true)}>
+            ตัวกรอง{activeCount > 0 ? ` (${activeCount})` : ""}
+          </button>
+        </div>
+        {open && <div className="sheet-backdrop" onClick={() => setOpen(false)} />}
         <div id="filters" className={`filters${open ? " is-open" : ""}`}>
+          <div className="sheet-head">
+            <h3>ตัวกรอง</h3>
+            <button className="sheet-close" type="button" aria-label="ปิดตัวกรอง" onClick={() => setOpen(false)}>×</button>
+          </div>
           <SelectField id="regionSelect" label="ภูมิภาค" value={filters.region} onChange={(value) => onFilterChange({ region: value })} options={REGION_OPTIONS} />
-          <SelectField id="popularSelect" label="เรียงตามความนิยม" value={filters.popular} onChange={(value) => onFilterChange({ popular: value })} options={POPULAR_OPTIONS} />
           <SelectField id="referenceSelect" label="คำนวณระยะทางจากจังหวัด" value={filters.province} onChange={(value) => onFilterChange({ province: value })} options={PROVINCE_OPTIONS} />
+          <p className="field-hint">เลือกจังหวัดแล้ว สวนจะเรียงจากใกล้ไปไกลให้อัตโนมัติ</p>
           <button
-            className="primary-button"
+            className="primary-button sheet-only"
             type="button"
             onClick={() => {
               setOpen(false);
               onShowResults();
             }}
           >
-            ดูผลลัพธ์ ({resultCount} สวน)
+            {resultLabel ? `ดูผลลัพธ์ (${resultLabel})` : "ดูผลลัพธ์"}
           </button>
+          <button className="link-button sheet-only" type="button" onClick={onReset}>ล้างทั้งหมด</button>
         </div>
-        <div className="map-block">
-          <div className="map-art">
-            <img src="/assets/images/thailand-map.jpg" alt="แผนที่ประเทศไทย" />
-          </div>
-          <button className="clear-button" type="button" onClick={onReset}>ล้างผลการค้นหา</button>
+        <div className="panel-footer">
+          <span>{statusText}</span>
+          <button className="link-button" type="button" onClick={onReset}>ล้างทั้งหมด</button>
         </div>
       </div>
     </aside>

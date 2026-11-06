@@ -54,7 +54,7 @@ client/                         React + Vite
   src/utils/                    geo (Haversine), text (normalizeName), gardenImages, api
   src/hooks/useGardens.js       ดึงข้อมูลจาก Express + สถานะ loading/success/empty/error
   src/components/               ดู Component Tree
-  src/styles.css                CSS เดิมทั้งหมด (คัดลอกมาไม่แก้)
+  src/styles.css                CSS เดิม + ปรับ UX (ผลลัพธ์ขึ้นก่อน, sidebar ติดจอ, bottom sheet ตัวกรองบนมือถือ, การ์ดรายละเอียด 2 คอลัมน์)
 ```
 
 ## Component Tree
@@ -62,13 +62,15 @@ client/                         React + Vite
 ```
 App                               state: query, filters, selected  ·  hooks: useGardens
 ├─ Header
-├─ SearchPanel                    แผงซ้าย (มือถือ: พับตัวกรองได้)
+├─ SearchPanel                    แผงซ้าย (มือถือ: ปุ่ม "ตัวกรอง" เปิดเป็น bottom sheet)
 │  ├─ SearchBox                   ช่องค้นหา + รายการแนะนำ 5 อันดับ
-│  └─ SelectField ×3              ภูมิภาค / ความนิยม (มาก↔น้อย) / จังหวัดต้นทาง
-├─ FeaturedCarousel               5 สวนยอดนิยม เลื่อนอัตโนมัติ 4 วินาที
+│  └─ SelectField ×2              ภูมิภาค / จังหวัดต้นทาง
+├─ PopularList                    [ใหม่] 3 สวนยอดนิยมใต้แผงซ้าย (เฉพาะจอใหญ่)
+├─ ResultsArea                    หัวข้อ + สถานะ + เรียงตาม (มาก↔น้อย) + ตารางการ์ด — อยู่ก่อนสไลด์เสมอ
+│  ├─ ActiveFilters               [ใหม่] ชิปตัวกรองที่ใช้อยู่ กด × เอาออก
+│  └─ GardenCard ── ImageSlot     ชื่อ 2 บรรทัด + ยอดผู้เข้าชม + ระยะทาง
+├─ FeaturedCarousel               5 สวนยอดนิยม เลื่อนอัตโนมัติ 4 วินาที (เฉพาะมือถือ)
 │  └─ ImageSlot
-├─ ResultsArea                    หัวข้อ + สถานะ + ตารางการ์ด
-│  └─ GardenCard ── ImageSlot
 └─ GardenModal                    (แสดงเมื่อเลือกสวน)
    ├─ ImageGallery
    ├─ WeatherCard                 [ใหม่] ── StatusBox  (useFetch)
@@ -94,6 +96,7 @@ App                               state: query, filters, selected  ·  hooks: us
 | # | ข้อแนะนำ | Before | After |
 |---|---|---|---|
 | 1 | UX มือถือ ผลลัพธ์ลงไปกองข้างล่าง | แผงค้นหา (ช่องค้นหา + dropdown 3 ช่อง + ปุ่ม + รูปแผนที่) อยู่บนสุดแล้วตามด้วยสไลด์ 250px ผลลัพธ์จึงอยู่ไกลลงไปหลายจอ | จอ ≤ 850px: ตัวกรองพับเก็บ (ปุ่ม "ตัวกรองและการเรียง") ซ่อนรูปแผนที่ สลับลำดับเป็น ผลการค้นหา → สวนยอดนิยม และปุ่ม "ดูผลลัพธ์ (N สวน)" เลื่อนไปที่ผลลัพธ์ให้ (`SearchPanel.jsx`, `styles.css` ช่วง `@media`) |
+| 1.1 | UX จอใหญ่ ผลลัพธ์อยู่ใต้สไลด์ | สไลด์สวนยอดนิยมขนาดใหญ่อยู่เหนือผลลัพธ์ ต้องเลื่อนลงไปดู และมีปุ่ม "ดูผลลัพธ์" ที่ไม่จำเป็น | ผลลัพธ์อยู่บนสุด แผงซ้ายติดจอ (sticky) ตัวกรองมีผลทันที สวนยอดนิยมย้ายเป็นรายการ 3 อันดับใต้แผงซ้าย; มือถือเปลี่ยนตัวกรองเป็น bottom sheet (`SearchPanel.jsx`, `ResultsArea.jsx`, `PopularList.jsx`, `styles.css`) |
 | 2 | API ต่อยอดยาก ไอเดียตัน | มีแต่ data.go.th ชุดเดียว | ยังใช้ data.go.th เป็นข้อมูลหลัก + ต่อยอดด้วยพิกัดของสวนไปหา เส้นทาง / อากาศ / สถานที่รอบสวน (ต้องขออนุมัติอาจารย์) |
 | 3 | เส้นทางเป็นเส้นตรง | Haversine ตรงจากพิกัดจังหวัดถึงสวน, เวลา = ระยะ ÷ 60 | Express เรียก OSRM ได้ระยะ+เวลาตามถนนจริง; ถ้า OSRM ล่มจะบอกชัดว่า "ระยะเส้นตรง (ประมาณ)" แทนที่จะแสดงเหมือนเป็นค่าจริง |
 

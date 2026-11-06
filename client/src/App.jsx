@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import Header from "./components/Header.jsx";
 import SearchPanel from "./components/SearchPanel.jsx";
 import FeaturedCarousel from "./components/FeaturedCarousel.jsx";
+import PopularList from "./components/PopularList.jsx";
 import ResultsArea from "./components/ResultsArea.jsx";
 import GardenModal from "./components/GardenModal.jsx";
 import { useGardens } from "./hooks/useGardens.js";
@@ -76,6 +77,9 @@ export default function App() {
   if (status === "loading") sourceText = "กำลังโหลด...";
   else if (status === "error") sourceText = "โหลดข้อมูลไม่สำเร็จ";
 
+  // เปลี่ยนตัวกรองบางตัว (ใช้ร่วมกันทั้งแผงค้นหา ชิป และตัวเลือกเรียงตาม)
+  const onFilterChange = (change) => setFilters((previous) => ({ ...previous, ...change }));
+
   // ล้างทุกอย่างกลับค่าเริ่มต้น
   const handleReset = () => {
     setQuery("");
@@ -87,21 +91,27 @@ export default function App() {
       <Header />
       <main>
         <div className="layout">
-          <SearchPanel
-            query={query}
-            onQueryChange={setQuery}
-            gardens={gardensWithDistance}
-            filters={filters}
-            onFilterChange={(change) => setFilters((previous) => ({ ...previous, ...change }))}
-            resultCount={results.length}
-            onShowResults={() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            onReset={handleReset}
-          />
+          {/* [แก้ไข UX] คอลัมน์ซ้าย (ติดจอบน PC): แผงค้นหา + สวนยอดนิยม 3 อันดับ */}
+          <div className="side-col">
+            <SearchPanel
+              query={query}
+              onQueryChange={setQuery}
+              gardens={gardensWithDistance}
+              filters={filters}
+              onFilterChange={onFilterChange}
+              statusText={statusText}
+              resultLabel={status === "success" ? `${results.length} สวน` : null}
+              onShowResults={() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              onReset={handleReset}
+            />
+            <PopularList gardens={gardens} sourceText={sourceText} onSelect={handleSelect} />
+          </div>
+          {/* [แก้ไขตามข้อแนะนำข้อ 1] ผลลัพธ์ขึ้นก่อนเสมอ สไลด์สวนยอดนิยม (ใช้บนมือถือ) อยู่ถัดลงมา */}
           <section className="right-panel" aria-label="ผลลัพธ์และสวนยอดนิยม">
-            <FeaturedCarousel gardens={gardens} sourceText={sourceText} onSelect={handleSelect} />
             <div className="results-wrap" ref={resultsRef}>
-              <ResultsArea status={viewStatus} gardens={results} statusText={statusText} onSelect={handleSelect} onRetry={retry} />
+              <ResultsArea status={viewStatus} gardens={results} statusText={statusText} filters={filters} onFilterChange={onFilterChange} onSelect={handleSelect} onRetry={retry} />
             </div>
+            <FeaturedCarousel gardens={gardens} sourceText={sourceText} onSelect={handleSelect} />
           </section>
         </div>
       </main>

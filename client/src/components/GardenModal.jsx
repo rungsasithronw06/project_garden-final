@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import ImageGallery from "./ImageGallery.jsx";
 import WeatherCard from "./WeatherCard.jsx";
 import PlacesList from "./PlacesList.jsx";
@@ -37,6 +38,15 @@ export default function GardenModal({ garden, origin, onClose }) {
     timeText = `${Math.ceil(garden.distance / 60)} ชม. โดยประมาณ`;
   }
 
+  // [เพิ่มใหม่ — UX] กด Esc เพื่อปิดหน้าต่างรายละเอียด
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div
       className="modal is-open"
@@ -69,14 +79,20 @@ export default function GardenModal({ garden, origin, onClose }) {
               <strong>{timeText}</strong>
             </div>
           </div>
-          {hasCoordinates && (
+        </div>
+        {/* [แก้ไข UX] ปุ่มนำทางย้ายออกมาเป็นแถบ: PC อยู่ใต้ตัวเลข / มือถือเป็นแถบติดล่างของหน้าต่าง (จัดตำแหน่งด้วย CSS) */}
+        {hasCoordinates && (
+          <div className="directions-bar">
             <a className="directions-button" href={directionsUrl(garden, origin)} target="_blank" rel="noreferrer">
               🧭 นำทางด้วย Google Maps
             </a>
-          )}
+          </div>
+        )}
+        {/* [แก้ไข UX] PC: สภาพอากาศกับสถานที่รอบสวนวางคู่กัน 2 คอลัมน์ จะได้ไม่ต้องเลื่อนยาว */}
+        <div className="detail-extras">
+          <WeatherCard garden={garden} />
+          <PlacesList garden={garden} />
         </div>
-        <WeatherCard garden={garden} />
-        <PlacesList garden={garden} />
       </article>
     </div>
   );

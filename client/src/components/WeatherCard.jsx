@@ -2,10 +2,15 @@ import { useFetch } from "../hooks/useFetch.js";
 import StatusBox from "./StatusBox.jsx";
 
 const WEEKDAYS = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
+// [แก้ไข UX] เดิมใช้ตัวย่อวัน (ส. อา.) อ่านยาก → 3 วันแรกใช้ วันนี้/พรุ่งนี้/มะรืนนี้ แล้วมีวันที่กำกับ
+const RELATIVE_DAYS = ["วันนี้", "พรุ่งนี้", "มะรืนนี้"];
 function dayLabel(dateText, index) {
-  if (index === 0) return "วันนี้";
+  if (index < RELATIVE_DAYS.length) return RELATIVE_DAYS[index];
   // ใส่เวลาเที่ยงกันวันเลื่อนจากเขตเวลา
   return WEEKDAYS[new Date(`${dateText}T12:00:00`).getDay()];
+}
+function dayDate(dateText) {
+  return new Date(`${dateText}T12:00:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short" });
 }
 
 // [เพิ่มใหม่] สภาพอากาศ ณ สวน (ข้อ 6) — ข้อมูลที่ผ่านการแปลงแล้วจาก Express (/api/gardens/:id/weather)
@@ -38,6 +43,7 @@ export default function WeatherCard({ garden }) {
             {data.daily.map((day, index) => (
               <li key={day.date}>
                 <span>{dayLabel(day.date, index)}</span>
+                <small>{dayDate(day.date)}</small>
                 <span aria-hidden="true">{day.icon}</span>
                 <span>{day.minC}–{day.maxC}°</span>
                 <small>ฝน {day.rainChance}%</small>

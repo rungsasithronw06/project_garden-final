@@ -25,7 +25,7 @@ export default function PlacesList({ garden }) {
               <ul>
                 {group.items.map((place) => (
                   <li key={`${place.name}-${place.lat}`}>
-                    <a href={placeUrl(place)} target="_blank" rel="noreferrer">{place.name}</a>
+                    <a href={placeUrl(place)} target="_blank" rel="noreferrer">{place.name}<span aria-hidden="true"> ↗</span></a>
                     <small>~{place.distanceKm} กม.</small>
                   </li>
                 ))}
