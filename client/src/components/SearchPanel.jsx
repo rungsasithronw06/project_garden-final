@@ -19,7 +19,7 @@ for (const provinceName in provinceCoordinates) PROVINCE_OPTIONS.push({ value: p
 // [แก้ไข UX] จอใหญ่: แผงอยู่ซ้ายแบบติดจอ ตัวกรองมีผลทันที (ไม่มีปุ่มยืนยัน) ท้ายแผงบอกจำนวนผลลัพธ์ + ปุ่มล้างทั้งหมด
 //             จอเล็ก (≤ 850px): เหลือช่องค้นหา + ปุ่ม "ตัวกรอง (n)" กดแล้วเปิดเป็น bottom sheet มีปุ่ม "ดูผลลัพธ์" ปิด sheet แล้วเลื่อนไปที่ผลลัพธ์
 // [ย้าย] ตัวเลือก "เรียงตาม" ไปอยู่ที่หัวผลลัพธ์ (ResultsArea.jsx) — ใช้ state filters.popular ตัวเดิม
-// [เอาออก] รูปแผนที่ประเทศไทย (ไฟล์รูปยังอยู่ใน public/assets/images ไม่ได้ลบ)
+// [เอาออก] รูปแผนที่ประเทศไทย (ลบไฟล์รูปออกจาก public/assets/images แล้วเพราะไม่มีที่ใช้)
 export default function SearchPanel({ query, onQueryChange, gardens, filters, onFilterChange, statusText, resultLabel, onShowResults, onReset }) {
   const [open, setOpen] = useState(false); // ใช้เฉพาะจอเล็ก (จอใหญ่แสดงตัวกรองเสมอ)
   const activeCount = (filters.region !== "ทั้งหมด" ? 1 : 0) + (filters.province ? 1 : 0);

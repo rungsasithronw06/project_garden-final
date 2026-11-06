@@ -7,7 +7,7 @@ React + Vite (หน้าร้าน) คุยกับ Express (ครัว
 
 ```bash
 npm install                        # ติดตั้ง server + client (npm workspaces)
-cp server/.env.example server/.env # ใส่ key ภายหลัง (ตอนนี้เว้นว่างได้)
+cp server/.env.example server/.env # ไม่บังคับ — API ที่ใช้ไม่ต้องมี key ตั้งค่าได้ถ้าต้องการเปลี่ยนเซิร์ฟเวอร์
 npm run dev                        # Express :3001 + Vite :5173 พร้อมกัน แล้วเปิด http://localhost:5173
 npm test                           # เทสต์ server + client (ไม่ต้องใช้เน็ต)
 ```
@@ -46,6 +46,7 @@ server/                         Express
   src/services/places.js        [ใหม่] Overpass: จัดหมวด, ตัดซ้ำ (Hash Map), เรียงตามระยะ, cache 24 ชม.
   src/services/cache.js         TTL cache + ตัวนับ /api/stats
   src/utils/                    validate, errors, geo
+  scripts/check-places.mjs      เครื่องมือตรวจ Overpass (วัดเวลา status / query จิ๋ว / query จริง) — ใช้ตอนสถานที่รอบสวนไม่ขึ้น
   data/backup.json              ข้อมูลสำรองจากงานเดิม
 client/                         React + Vite
   public/assets/images/         รูปสวนทั้งหมดจากงานเดิม (ชื่อไฟล์เป็นภาษาอังกฤษ เช่น chombueng01.png)
@@ -68,6 +69,7 @@ App                               state: query, filters, selected  ·  hooks: us
 ├─ PopularList                    [ใหม่] 3 สวนยอดนิยมใต้แผงซ้าย (เฉพาะจอใหญ่)
 ├─ ResultsArea                    หัวข้อ + สถานะ + เรียงตาม (มาก↔น้อย) + ตารางการ์ด — อยู่ก่อนสไลด์เสมอ
 │  ├─ ActiveFilters               [ใหม่] ชิปตัวกรองที่ใช้อยู่ กด × เอาออก
+│  ├─ StatusBox                   [ใหม่] loading / error (+ลองอีกครั้ง) / empty ของรายการสวน
 │  └─ GardenCard ── ImageSlot     ชื่อ 2 บรรทัด + ยอดผู้เข้าชม + ระยะทาง
 ├─ FeaturedCarousel               5 สวนยอดนิยม เลื่อนอัตโนมัติ 4 วินาที (เฉพาะมือถือ)
 │  └─ ImageSlot
@@ -91,14 +93,28 @@ App                               state: query, filters, selected  ·  hooks: us
 | ไฟล์ | `index.html` ไฟล์เดียว | แยกเป็น component/hook/util (DSA เดิมไม่ได้แก้ตรรกะ) |
 | `vercel.json` | มี | เพิ่ม config ให้ deploy frontend + Express API บน Vercel |
 
-## ข้อแนะนำของอาจารย์ → แก้อย่างไร (Before → After)
+## 7. ตารางสำหรับ README และคลิป
 
-| # | ข้อแนะนำ | Before | After |
+### 7.1 ตารางส่วนร่วม
+
+> ข้อมูลสมมติ 1 คน — **แก้เป็นชื่อ รหัสนักศึกษา และช่วงคลิปจริงก่อนส่ง**
+
+| ชื่อ-สกุล | รหัสนักศึกษา | ชิ้นงานที่รับผิดชอบ (ไฟล์ / component / route / DSA) | ช่วงที่นำเสนอในคลิป |
 |---|---|---|---|
-| 1 | UX มือถือ ผลลัพธ์ลงไปกองข้างล่าง | แผงค้นหา (ช่องค้นหา + dropdown 3 ช่อง + ปุ่ม + รูปแผนที่) อยู่บนสุดแล้วตามด้วยสไลด์ 250px ผลลัพธ์จึงอยู่ไกลลงไปหลายจอ | จอ ≤ 850px: ตัวกรองพับเก็บ (ปุ่ม "ตัวกรองและการเรียง") ซ่อนรูปแผนที่ สลับลำดับเป็น ผลการค้นหา → สวนยอดนิยม และปุ่ม "ดูผลลัพธ์ (N สวน)" เลื่อนไปที่ผลลัพธ์ให้ (`SearchPanel.jsx`, `styles.css` ช่วง `@media`) |
-| 1.1 | UX จอใหญ่ ผลลัพธ์อยู่ใต้สไลด์ | สไลด์สวนยอดนิยมขนาดใหญ่อยู่เหนือผลลัพธ์ ต้องเลื่อนลงไปดู และมีปุ่ม "ดูผลลัพธ์" ที่ไม่จำเป็น | ผลลัพธ์อยู่บนสุด แผงซ้ายติดจอ (sticky) ตัวกรองมีผลทันที สวนยอดนิยมย้ายเป็นรายการ 3 อันดับใต้แผงซ้าย; มือถือเปลี่ยนตัวกรองเป็น bottom sheet (`SearchPanel.jsx`, `ResultsArea.jsx`, `PopularList.jsx`, `styles.css`) |
-| 2 | API ต่อยอดยาก ไอเดียตัน | มีแต่ data.go.th ชุดเดียว | ยังใช้ data.go.th เป็นข้อมูลหลัก + ต่อยอดด้วยพิกัดของสวนไปหา เส้นทาง / อากาศ / สถานที่รอบสวน (ต้องขออนุมัติอาจารย์) |
-| 3 | เส้นทางเป็นเส้นตรง | Haversine ตรงจากพิกัดจังหวัดถึงสวน, เวลา = ระยะ ÷ 60 | Express เรียก OSRM ได้ระยะ+เวลาตามถนนจริง; ถ้า OSRM ล่มจะบอกชัดว่า "ระยะเส้นตรง (ประมาณ)" แทนที่จะแสดงเหมือนเป็นค่าจริง |
+| สมชาย ใจดี (สมมติ) | 6800000000 | **Frontend:** `App.jsx`, `SearchPanel`, `ResultsArea`, `ActiveFilters`, `PopularList`, `GardenModal`, `StatusBox`, hooks `useGardens` / `useFetch`, `styles.css` (UX จอใหญ่ + bottom sheet มือถือ)<br>**Backend:** route `GET /api/gardens`, `/:id/weather`, `/:id/places`, `GET /api/route`; `cache.js`, `validate.js`, `gardenBuilder.js`, `places.js`, `routing.js`, `weather.js`<br>**DSA:** Edit Distance (`fuzzySearch.js`), Merge Sort (`popularity.js`, `mergeSort.js`), Hash Map (`gardenBuilder.js`, `cache.js`, `places.js`) | 00:00 – 00:00 (ใส่ช่วงเวลาจริง) |
+
+### 7.2 ตารางข้อแนะนำจากงานแรก → สิ่งที่แก้
+
+ภาพ Before / After ทั้งหมดอยู่ในไดรฟ์: **[เปิดโฟลเดอร์ภาพ](https://drive.google.com/drive/folders/10HGunnBjgRNKzTGF3MJzeW2JHeDzUNfy?usp=sharing)**
+ช่อง `📷` คือจุดวางภาพ ใส่ได้ 2 แบบ: ลิงก์ไปที่ไฟล์ในไดรฟ์ หรือฝังรูปด้วย `![ชื่อภาพ](https://drive.google.com/thumbnail?id=รหัสไฟล์&sz=w1000)` (ไฟล์ต้องตั้งแชร์เป็น "ทุกคนที่มีลิงก์")
+
+| ข้อแนะนำจากงานแรก | สิ่งที่แก้ในงานนี้ | หลักฐาน Before / After |
+|---|---|---|
+| **1a. UX มือถือ:** ผลการค้นหาลงไปกองข้างล่างจอ มองไม่เห็นผลลัพธ์ | **เดิม:** แผงค้นหา (ช่องค้นหา + dropdown 3 ช่อง + ปุ่ม + รูปแผนที่) อยู่บนสุด ตามด้วยสไลด์ 250px ผลลัพธ์อยู่ไกลลงไปหลายจอ<br>**ตอนนี้:** จอ ≤ 850px เหลือช่องค้นหา + ปุ่ม "ตัวกรอง (n)" เปิดเป็น bottom sheet มีปุ่ม "ดูผลลัพธ์ (N สวน)" ผลลัพธ์ขึ้นก่อนสไลด์ และมีชิปตัวกรองกด × เอาออกได้ (`SearchPanel.jsx`, `ResultsArea.jsx`, `ActiveFilters.jsx`, `styles.css` ช่วง `@media`) | **Before:** 📷 _[ใส่ภาพ: มือถือก่อนแก้ — หน้าแรกก่อนเลื่อน]_<br>**After:** 📷 _**[รอใส่ภาพ: มือถือหลังแก้ — ถ่ายจากเว็บที่ deploy แล้ว]**_ |
+| **1b. UX จอใหญ่ (PC):** ผลลัพธ์อยู่ใต้สไลด์ต้องเลื่อนลงไปดู | **เดิม:** สไลด์สวนยอดนิยมขนาดใหญ่อยู่เหนือผลลัพธ์ และมีปุ่ม "ดูผลลัพธ์" ที่ต้องกดยืนยัน<br>**ตอนนี้:** ผลลัพธ์อยู่บนสุด แผงค้นหาติดจอด้านซ้าย (sticky) ตัวกรองมีผลทันที สวนยอดนิยมย้ายเป็นรายการ 3 อันดับใต้แผงซ้าย (`PopularList.jsx`) | **Before:** 📷 _[ใส่ภาพ: PC ก่อนแก้ — หน้าแรกเต็มจอ]_<br>**After:** 📷 _[ใส่ภาพ: PC หลังแก้ — หน้าแรกเต็มจอ]_ |
+| **2. API ต่อยอดยาก** ไอเดียตัน | **เดิม:** ใช้ data.go.th ชุดเดียว ได้แค่ชื่อ ที่อยู่ พิกัด ยอดผู้เข้าชม<br>**ตอนนี้:** ยังใช้ data.go.th เป็นข้อมูลหลัก แล้วต่อยอดด้วยพิกัดของสวนไปหา อากาศ (Open-Meteo) สถานที่รอบสวน (Overpass/OpenStreetMap) และเส้นทางถนนจริง (OSRM) ทั้งหมดผ่าน Express (`weather.js`, `places.js`, `routing.js`) แจ้งขออนุมัติอาจารย์แล้ว | **Before:** 📷 _[ใส่ภาพ: หน้ารายละเอียดสวนก่อนแก้ — มีแค่ชื่อ ที่อยู่ ยอดผู้เข้าชม]_<br>**After:** 📷 _[ใส่ภาพ: หน้ารายละเอียดสวนหลังแก้ — การ์ดอากาศ + สถานที่รอบสวน]_ |
+| **3. เส้นทางเป็นเส้นตรง** ไม่ได้คำนวณจากเส้นทางจริง | **เดิม:** Haversine ตรงจากพิกัดจังหวัดถึงสวน เวลา = ระยะ ÷ 60<br>**ตอนนี้:** เลือกจังหวัดต้นทาง → Express เรียก OSRM ได้ระยะ + เวลาตามถนนจริง (`GET /api/route`, `GardenModal.jsx`) ถ้า OSRM ล่มจะบอกชัดว่า "เส้นตรง (ประมาณ)" แทนที่จะแสดงเหมือนเป็นค่าจริง | **Before:** 📷 _[ใส่ภาพ: ระยะแบบเส้นตรง — ป้าย "~ กม. เส้นตรง" บนการ์ด]_<br>**After:** 📷 _[ใส่ภาพ: ระยะ + เวลาตามถนนจริงในหน้ารายละเอียด]_ |
+
 
 ## เงื่อนไขอาจารย์ ↔ ไฟล์
 
@@ -108,7 +124,7 @@ App                               state: query, filters, selected  ·  hooks: us
 | 2 React + Vite + Component Tree | `client/`, หัวข้อ Component Tree |
 | 3 Express มีหน้าที่จริง | validate (`utils/validate.js`), cache TTL (`services/cache.js`), รวม/จับคู่ข้อมูล (`gardenBuilder.js`), เส้นทางถนนจริง (`routing.js`), แปลง/สรุปข้อมูลอากาศ (`weather.js`), จัดหมวด/ตัดซ้ำสถานที่ (`places.js`), fallback (`dataGoTh.js`, `routing.js`), ซ่อน URL/พิกัดจริงจาก client (รับ id สวนแทนพิกัด) |
 | 4 UX 4 สถานะ | `useGardens.js`, `useFetch.js`, `StatusBox.jsx` · flow สั้นลง: ตัวกรองมีผลทันที (ไม่ต้องกดยืนยัน) |
-| 5 Before → After | ตารางด้านบน |
+| 5 Before → After | ตาราง 7.2 ด้านบน (ภาพหลักฐานอยู่ในไดรฟ์) |
 | 6 DSA เชิงลึก | ดูตารางด้านล่าง |
 
 ## DSA (ใช้กับข้อมูลจริง)
@@ -116,17 +132,17 @@ App                               state: query, filters, selected  ·  hooks: us
 | ที่ | DSA | ฝั่ง | Big-O | เหตุผล / Before → After |
 |---|---|---|---|---|
 | `fuzzySearch.js` | Edit Distance (Sellers) DP | React | O(m·n) ต่อสวน | พิมพ์ผิดแล้วยังเจอ (ไม่เจอเลยในของเดิม) |
-| `popularity.js` | Merge Sort + แยกกลุ่ม | React | O(n log n) | น้อย→มากโดยให้ "ไม่มีข้อมูล (0)" ไปท้าย ไม่งั้น 6 จาก 17 สวนจะขึ้นก่อนทั้งที่แค่ไม่มีข้อมูล |
+| `popularity.js` | Merge Sort + แยกกลุ่ม | React | O(n log n) | น้อย→มากโดยให้ "ไม่มีข้อมูล (0)" ไปท้าย ไม่งั้น 6 จาก 17 แถวในตารางสถิติจะขึ้นก่อนทั้งที่แค่ไม่มีข้อมูล |
 | `gardenBuilder.js` | Hash Map join | Express | O(n) แทน O(n²) | จับคู่ชื่อสวนกับยอดผู้เข้าชม |
 | `places.js` | Hash Map ตัดซ้ำ + Merge Sort ต่อหมวด | Express | O(p log p) | OSM มีทั้งจุดและอาคารของที่เดียวกัน |
 | `cache.js` | Hash Map + TTL | Express | O(1) | `GET /api/stats` เทียบจำนวนครั้งที่ยิง API ก่อน/หลังมี cache |
 
-เทสต์: `npm test` (server 17 ข้อ, client 9 ข้อ — ปลอมบริการภายนอก ไม่ต้องใช้เน็ต)
+เทสต์: `npm test` (server 14 ข้อ, client 9 ข้อ — ปลอมบริการภายนอก ไม่ต้องใช้เน็ต)
 
 ## หมายเหตุ
 
-- `backup.json` มี 13 สวน แต่สถิติผู้เข้าชมมี 17 แถว (วังน้ำเย็น, บ้านเพ, เขาหินซ้อน, สุไหงปาดี ไม่อยู่ใน backup) ข้อมูลสดอาจมีครบ รายชื่อที่จับคู่ไม่ได้ดูที่ `meta.unmatchedVisitorNames` ใน `/api/gardens`
-- ยอดผู้เข้าชม 0 อาจแปลว่า "ไม่มีข้อมูล" (6 จาก 17 แถวเป็น 0) ตอนนี้แสดงเป็น 0 คนเหมือนเดิม
+- ข้อมูลสวนมี 13 แห่ง (เท่ากับ `backup.json`) ส่วนตารางสถิติผู้เข้าชมมี 17 แถว แถวที่จับคู่กับสวนไม่ได้ดูที่ `meta.unmatchedVisitorNames` ใน `/api/gardens`
+- ยอดผู้เข้าชม 0 อาจแปลว่า "ไม่มีข้อมูล" (6 จาก 17 แถวเป็น 0) การ์ดสวนแสดงเป็น "ยังไม่มีข้อมูลผู้เข้าชม"
 - OSRM public server (`router.project-osrm.org`) เหมาะกับการสาธิต/ใช้เบา ๆ ถ้าจะใช้จริงจังให้ตั้ง `OSRM_BASE_URL` เป็นเซิร์ฟเวอร์ของตัวเอง; Overpass มีขีดจำกัดการเรียกเช่นกัน (จึง cache 24 ชม.)
 - ข้อมูลสถานที่จาก OpenStreetMap ในพื้นที่ห่างไกลอาจไม่ครบ — หน้าเว็บจึงมีสถานะ "ไม่พบสถานที่" แยกจาก error
 - ขอบเขต DSA (ข้อ 7): ใช้เฉพาะ Merge Sort, Edit Distance (DP), Hash Map, Linear Search ที่ใช้ในงานเดิม/ที่เรียน — ควรเช็คกับหัวข้อในคาบเรียนอีกครั้ง

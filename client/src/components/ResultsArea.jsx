@@ -1,5 +1,6 @@
 import GardenCard from "./GardenCard.jsx";
 import ActiveFilters from "./ActiveFilters.jsx";
+import StatusBox from "./StatusBox.jsx";
 
 // พื้นที่ผลการค้นหา: หัวข้อ + ข้อความสถานะ + [ย้ายมา] เรียงตาม + [เพิ่มใหม่] ชิปตัวกรอง + ตารางการ์ด
 // status: loading | error | success | empty — คุมว่าจะโชว์อะไรในตาราง
@@ -23,14 +24,11 @@ export default function ResultsArea({ status, gardens, statusText, filters, onFi
         </div>
       </div>
       <ActiveFilters filters={filters} onFilterChange={onFilterChange} />
-      {/* [เพิ่มใหม่] ปุ่มลองอีกครั้งเมื่อโหลดข้อมูลไม่สำเร็จ */}
-      {status === "error" && (
-        <button className="clear-button" type="button" onClick={onRetry}>ลองอีกครั้ง</button>
-      )}
       <div className="result-grid" aria-live="polite">
-        {status !== "loading" && status !== "error" && gardens.length === 0 && (
-          <div className="empty">ไม่พบสวนที่ตรงกับเงื่อนไข</div>
-        )}
+        {/* [แก้ไข] ครบ 4 สถานะด้วย StatusBox ตัวเดียวกับอากาศ/สถานที่: loading (วงกลมหมุน) / error (+ลองอีกครั้ง) / empty / success (การ์ด) */}
+        {status === "loading" && <StatusBox kind="loading" message="กำลังโหลดรายการสวน..." />}
+        {status === "error" && <StatusBox kind="error" message="โหลดรายการสวนไม่สำเร็จ" onRetry={onRetry} />}
+        {status === "empty" && <StatusBox kind="empty" message={'ไม่พบสวนที่ตรงกับเงื่อนไข ลองเปลี่ยนคำค้นหาหรือกด "ล้างทั้งหมด"'} />}
         {gardens.map((garden) => (
           <GardenCard key={garden.id} garden={garden} onSelect={onSelect} />
         ))}
