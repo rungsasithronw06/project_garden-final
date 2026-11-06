@@ -101,12 +101,11 @@ App                               state: query, filters, selected  ·  hooks: us
 
 | ชื่อ-สกุล | รหัสนักศึกษา | ชิ้นงานที่รับผิดชอบ (ไฟล์ / component / route / DSA) | ช่วงที่นำเสนอในคลิป |
 |---|---|---|---|
-| สมชาย ใจดี (สมมติ) | 6800000000 | **Frontend:** `App.jsx`, `SearchPanel`, `ResultsArea`, `ActiveFilters`, `PopularList`, `GardenModal`, `StatusBox`, hooks `useGardens` / `useFetch`, `styles.css` (UX จอใหญ่ + bottom sheet มือถือ)<br>**Backend:** route `GET /api/gardens`, `/:id/weather`, `/:id/places`, `GET /api/route`; `cache.js`, `validate.js`, `gardenBuilder.js`, `places.js`, `routing.js`, `weather.js`<br>**DSA:** Edit Distance (`fuzzySearch.js`), Merge Sort (`popularity.js`, `mergeSort.js`), Hash Map (`gardenBuilder.js`, `cache.js`, `places.js`) | 00:00 – 00:00 (ใส่ช่วงเวลาจริง) |
+| วรัญญา รุ่งศศิธร | 681310021 | **Frontend:** `App.jsx`, `SearchPanel`, `ResultsArea`, `ActiveFilters`, `PopularList`, `GardenModal`, `StatusBox`, hooks `useGardens` / `useFetch`, `styles.css` (UX จอใหญ่ + bottom sheet มือถือ)<br>**Backend:** route `GET /api/gardens`, `/:id/weather`, `/:id/places`, `GET /api/route`; `cache.js`, `validate.js`, `gardenBuilder.js`, `places.js`, `routing.js`, `weather.js`<br>**DSA:** Edit Distance (`fuzzySearch.js`), Merge Sort (`popularity.js`, `mergeSort.js`), Hash Map (`gardenBuilder.js`, `cache.js`, `places.js`) | 00:00 – 00:00 (ใส่ช่วงเวลาจริง) |
 
 ### 7.2 ตารางข้อแนะนำจากงานแรก → สิ่งที่แก้
 
 ภาพ Before / After ทั้งหมดอยู่ในไดรฟ์: **[เปิดโฟลเดอร์ภาพ](https://drive.google.com/drive/folders/10HGunnBjgRNKzTGF3MJzeW2JHeDzUNfy?usp=sharing)**
-ช่อง `📷` คือจุดวางภาพ ใส่ได้ 2 แบบ: ลิงก์ไปที่ไฟล์ในไดรฟ์ หรือฝังรูปด้วย `![ชื่อภาพ](https://drive.google.com/thumbnail?id=รหัสไฟล์&sz=w1000)` (ไฟล์ต้องตั้งแชร์เป็น "ทุกคนที่มีลิงก์")
 
 | ข้อแนะนำจากงานแรก | สิ่งที่แก้ในงานนี้ | หลักฐาน Before / After |
 |---|---|---|
@@ -120,7 +119,7 @@ App                               state: query, filters, selected  ·  hooks: us
 
 | เงื่อนไข | อยู่ที่ไหน |
 |---|---|
-| 1 API เดิม | `server/src/constants.js` (ชุด data.go.th เดิม) · API เพิ่มเติมอยู่ `server/src/config.js` — รอขออนุมัติ |
+| 1 API เดิม | `server/src/constants.js` (ชุด data.go.th เดิม) · API เพิ่มเติมอยู่ `server/src/config.js`
 | 2 React + Vite + Component Tree | `client/`, หัวข้อ Component Tree |
 | 3 Express มีหน้าที่จริง | validate (`utils/validate.js`), cache TTL (`services/cache.js`), รวม/จับคู่ข้อมูล (`gardenBuilder.js`), เส้นทางถนนจริง (`routing.js`), แปลง/สรุปข้อมูลอากาศ (`weather.js`), จัดหมวด/ตัดซ้ำสถานที่ (`places.js`), fallback (`dataGoTh.js`, `routing.js`), ซ่อน URL/พิกัดจริงจาก client (รับ id สวนแทนพิกัด) |
 | 4 UX 4 สถานะ | `useGardens.js`, `useFetch.js`, `StatusBox.jsx` · flow สั้นลง: ตัวกรองมีผลทันที (ไม่ต้องกดยืนยัน) |
@@ -145,4 +144,6 @@ App                               state: query, filters, selected  ·  hooks: us
 - ยอดผู้เข้าชม 0 อาจแปลว่า "ไม่มีข้อมูล" (6 จาก 17 แถวเป็น 0) การ์ดสวนแสดงเป็น "ยังไม่มีข้อมูลผู้เข้าชม"
 - OSRM public server (`router.project-osrm.org`) เหมาะกับการสาธิต/ใช้เบา ๆ ถ้าจะใช้จริงจังให้ตั้ง `OSRM_BASE_URL` เป็นเซิร์ฟเวอร์ของตัวเอง; Overpass มีขีดจำกัดการเรียกเช่นกัน (จึง cache 24 ชม.)
 - ข้อมูลสถานที่จาก OpenStreetMap ในพื้นที่ห่างไกลอาจไม่ครบ — หน้าเว็บจึงมีสถานะ "ไม่พบสถานที่" แยกจาก error
-- ขอบเขต DSA (ข้อ 7): ใช้เฉพาะ Merge Sort, Edit Distance (DP), Hash Map, Linear Search ที่ใช้ในงานเดิม/ที่เรียน — ควรเช็คกับหัวข้อในคาบเรียนอีกครั้ง
+- ขอบเขต DSA : ใช้เฉพาะ Merge Sort, Edit Distance (DP), Hash Map, Linear Search ที่ใช้ในงานเดิม/ที่เรียน
+
+git status
