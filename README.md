@@ -31,7 +31,7 @@ npm test                           # เทสต์ server + client (ไม่�
 | 5 | สถานที่รอบๆ สวน | ✅ `GET /api/gardens/:id/places` → OpenStreetMap/Overpass (`PlacesList.jsx`) |
 | 6 | สภาพอากาศ | ✅ `GET /api/gardens/:id/weather` → Open-Meteo (`WeatherCard.jsx`) |
 
-> API เพิ่มเติม 3 ตัว (OSRM, Overpass, Open-Meteo) ฟรีและไม่ต้องใช้ key แต่ข้อ 1 ของอาจารย์ระบุว่าต้องขออนุมัติ — **ควรส่งข้อความขออนุมัติอาจารย์ก่อนส่งงาน** (API หลัก data.go.th ยังใช้ชุดเดิมทั้งหมด)
+> API เพิ่มเติม 3 ตัว (OSRM, Overpass, Open-Meteo) ฟรีและไม่ต้องใช้ key (API หลัก data.go.th ยังใช้ชุดเดิมทั้งหมด)
 
 ## โครงโฟลเดอร์
 
